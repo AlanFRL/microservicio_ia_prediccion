@@ -1,0 +1,15 @@
+============================================================
+REPORTE DE ENTRENAMIENTO - MODELO PREDICCIÓN CANCELACIONES
+============================================================
+
+Fecha: 2025-11-10 20:56:14
+Modelo: Random Forest Classifier
+
+MÉTRICAS:
+  • Accuracy:  0.8950
+  • Precision: 0.8939
+  • Recall:    0.8082
+  • F1-Score:  0.8489
+
+Matriz de Confusión:
+  [[120, 7], [14, 59]]
