@@ -685,54 +685,159 @@ IA_predicción/
 
 ---
 
-## 🔮 Próximos pasos
+## � Despliegue en Producción
 
-1. **Re-entrenar con datos reales**
-   - Exportar ventas desde MongoDB
-   - Incluir datos históricos reales
-   - Mejorar el accuracy
+### Kubernetes (Digital Ocean)
 
-2. **Agregar persistencia (PostgreSQL)**
-   - Guardar predicciones
-   - Tracking de precisión del modelo
-   - Feedback loop
+**Inicio Rápido:** Ver `INICIO_RAPIDO_K8S.md` (1 hora)
 
-3. **Dockerizar**
-   - Crear `Dockerfile`
-   - Crear `docker-compose.yml`
-   - Deploy en servidor
+```powershell
+# 1. Build y push imagen
+docker build -t tuusuario/microservicio-ia-prediccion:v1.0 .
+docker push tuusuario/microservicio-ia-prediccion:v1.0
 
-4. **Conectar con n8n**
-   - Trigger automático al crear venta
-   - Enviar notificación si prob > 70%
+# 2. Crear cluster en Digital Ocean
+
+# 3. Configurar kubectl
+kubectl cluster-info
+
+# 4. Crear secret
+kubectl create secret generic fastapi-secrets --from-literal=...
+
+# 5. Desplegar
+kubectl apply -f k8s-deployment.yaml
+
+# 6. Obtener EXTERNAL-IP
+kubectl get services
+```
+
+**Guía Completa:** `DESPLIEGUE_DIGITAL_OCEAN.md`
+
+### Docker Local
+
+```powershell
+# Build
+docker build -t microservicio-ia-prediccion .
+
+# Run
+docker run -p 8001:8001 \
+  -e MONGODB_URI="..." \
+  -e EMAIL_MODE="real" \
+  microservicio-ia-prediccion
+```
+
+### Archivos de Deployment
+
+- `Dockerfile` - Imagen Docker optimizada
+- `k8s-deployment.yaml` - Deployment + Service para Kubernetes
+- `k8s-hpa.yaml` - Horizontal Pod Autoscaler
+- `deploy.ps1` - Script automatizado de despliegue
 
 ---
 
-## 📚 Recursos útiles
+## 📧 Configuración de Emails
 
+### Modo Simulación (Desarrollo)
+
+```bash
+EMAIL_MODE=simulacion
+```
+
+Los emails se muestran solo en logs (no se envían).
+
+### Modo Real (Producción)
+
+1. **Generar App Password de Gmail:**
+   - https://myaccount.google.com/apppasswords
+   - Guardar la contraseña de 16 caracteres
+
+2. **Configurar `.env`:**
+   ```bash
+   EMAIL_MODE=real
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=tu-email@gmail.com
+   SMTP_PASSWORD=xxxx xxxx xxxx xxxx
+   ```
+
+3. **Reiniciar servidor**
+
+**Guía Completa:** `CONFIGURAR_GMAIL.md`
+
+---
+
+## 🔮 Próximos pasos
+
+1. **✅ MongoDB Atlas Integrado**
+   - Guardar predicciones >= 70%
+   - Sistema de recordatorios automáticos
+
+2. **✅ Sistema de Emails Real**
+   - Envío vía Gmail SMTP
+   - HTML profesional responsive
+   - Manejo robusto de errores
+
+3. **✅ Despliegue en Kubernetes**
+   - Digital Ocean con LoadBalancer
+   - Secrets para credenciales
+   - Auto-escalado configurado
+
+4. **🔄 Próximas mejoras**
+   - Re-entrenar con datos reales
+   - Dashboard de métricas
+   - API de feedback
+
+---
+
+## 📚 Documentación
+
+### Guías de Usuario
+- **`INICIO_RAPIDO_K8S.md`** - Desplegar en 1 hora
+- **`CONFIGURAR_GMAIL.md`** - Activar envío de emails
+- **`DESPLIEGUE_DIGITAL_OCEAN.md`** - Guía completa de K8s
+
+### Documentación Técnica
+- **`guia_ia.md`** - Detalles del modelo ML
+- **`IMPLEMENTACION_EMAIL_REAL.md`** - Sistema de emails
+- **`KUBERNETES_DEPLOYMENT.md`** - Arquitectura K8s
+
+### Recursos
 - **Documentación interactiva:** http://localhost:8001/docs
 - **ReDoc:** http://localhost:8001/redoc
 - **Health check:** http://localhost:8001/health
-- **Guía técnica:** `guia_ia.md`
 
 ---
 
 ## 💡 Notas importantes
 
-- ⚠️ El modelo actual está entrenado con **datos sintéticos**
-- ⚠️ La precisión mejorará con **datos reales**
-- ✅ El microservicio está **listo para integrarse con Spring Boot**
-- ✅ Los endpoints están **validados con Pydantic**
-- ✅ El código es **simple y fácil de entender**
+- ✅ El modelo tiene **89.5% de accuracy** con 11 features
+- ✅ Integración con **MongoDB Atlas** compartida
+- ✅ Sistema de **recordatorios automáticos** (cron 10:00 AM)
+- ✅ **Emails reales** con Gmail SMTP
+- ✅ **Manejo robusto de errores** - no bloquea si falla un email
+- ✅ **Listo para producción** en Kubernetes
+- ⚠️ El modelo mejorará con **datos reales históricos**
 
 ---
 
 ## 👨‍💻 Autor
 
 **Desarrollo IA - Agencia de Viajes**  
+Email: alanfromerol@gmail.com  
+GitHub: https://github.com/AlanFRL/microservicio_ia_prediccion  
 Fecha: Noviembre 2025  
-Versión: 1.0.0
+Versión: 4.0.0
 
 ---
 
-**¿Dudas?** Revisa `guia_ia.md` para detalles técnicos completos.
+## 📄 Licencia
+
+MIT License - Ver archivo `LICENSE`
+
+---
+
+**¿Necesitas ayuda?**  
+- 🚀 Despliegue: `INICIO_RAPIDO_K8S.md`
+- 📧 Emails: `CONFIGURAR_GMAIL.md`
+- 🤖 ML: `guia_ia.md`
+

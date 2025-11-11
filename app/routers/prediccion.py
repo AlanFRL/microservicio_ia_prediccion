@@ -3,7 +3,7 @@ Router para gestión de predicciones con MongoDB
 """
 
 from fastapi import APIRouter, HTTPException
-from app.schemas import PredictRequestFull, PredictRequest, PredictResponse
+from app.schemas import PredictRequestFull, PredictResponse
 from app.services.predictor import get_predictor
 from app.services.prediccion_service import PrediccionService
 import logging
@@ -13,12 +13,12 @@ logger = logging.getLogger(__name__)
 
 
 @router.post("/predict", response_model=PredictResponse)
-def predecir(request: PredictRequestFull | PredictRequest):
+def predecir(request: PredictRequestFull):
     """
     Realiza una predicción de cancelación
     
-    - Si recibe PredictRequestFull (con email, nombre, etc.): guarda en MongoDB si riesgo >= 70%
-    - Si recibe PredictRequest (solo features): solo devuelve la predicción
+    Recibe PredictRequestFull (con email, nombre, etc.) desde Spring Boot
+    Guarda en MongoDB si riesgo >= 70%
     """
     try:
         logger.info(f"📊 Predicción solicitada para venta: {request.venta_id}")
@@ -46,9 +46,13 @@ def predecir(request: PredictRequestFull | PredictRequest):
         
         logger.info(f"✅ Predicción exitosa: {resultado['probabilidad_cancelacion']*100:.2f}% - {resultado['recomendacion']}")
         
-        # Si es PredictRequestFull, guardar en MongoDB (si riesgo >= 70%)
-        if isinstance(request, PredictRequestFull):
-            PrediccionService.guardar_prediccion(request.dict(), resultado)
+        # Siempre intentar guardar en MongoDB si riesgo >= 70%
+        logger.info(f"📝 Request tipo: PredictRequestFull detectado - Evaluando para MongoDB...")
+        doc_guardado = PrediccionService.guardar_prediccion(request.dict(), resultado)
+        if doc_guardado:
+            logger.info(f"💾 GUARDADO EN MONGODB: {request.venta_id} - {resultado['probabilidad_cancelacion']*100:.2f}%")
+        else:
+            logger.info(f"⚠️  NO se guardó en MongoDB: {request.venta_id} (probabilidad < 70% o ya existe)")
         
         # Retornar respuesta
         return PredictResponse(

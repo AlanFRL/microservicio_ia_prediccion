@@ -30,18 +30,31 @@ class PrediccionService:
             Documento guardado o None si no se guardó
         """
         try:
+            prob = resultado["probabilidad_cancelacion"]
+            logger.info(f"🔍 Verificando si guardar: {data['venta_id']} - Probabilidad: {prob*100:.2f}% - Umbral: {UMBRAL_RIESGO*100:.0f}%")
+            
             # Solo guardar si supera el umbral de riesgo
-            if resultado["probabilidad_cancelacion"] < UMBRAL_RIESGO:
-                logger.info(f"⚪ {data['venta_id']}: {resultado['probabilidad_cancelacion']*100:.0f}% - Por debajo del umbral ({UMBRAL_RIESGO*100:.0f}%)")
+            if prob < UMBRAL_RIESGO:
+                logger.info(f"⚪ {data['venta_id']}: {prob*100:.0f}% - Por debajo del umbral ({UMBRAL_RIESGO*100:.0f}%) - NO se guarda")
                 return None
+            
+            logger.info(f"🟢 {data['venta_id']}: {prob*100:.2f}% >= {UMBRAL_RIESGO*100:.0f}% - SÍ se guardará")
             
             db = get_db()
+            logger.info(f"📦 Database obtenida: {db.name}")
+            
             col = db.predicciones_cancelacion
+            logger.info(f"📁 Colección: predicciones_cancelacion")
             
             # No duplicar si ya existe
-            if col.find_one({"venta_id": data["venta_id"]}):
-                logger.warning(f"⚠️  {data['venta_id']}: Ya existe en MongoDB")
+            existe = col.find_one({"venta_id": data["venta_id"]})
+            if existe:
+                logger.warning(f"⚠️  {data['venta_id']}: Ya existe en MongoDB (duplicado evitado)")
                 return None
+            
+            logger.info(f"✅ No existe duplicado, procediendo a insertar...")
+            
+            logger.info(f"✅ No existe duplicado, procediendo a insertar...")
             
             # Crear documento
             documento = {
@@ -75,16 +88,23 @@ class PrediccionService:
                 "created_at": datetime.utcnow()
             }
             
+            logger.info(f"📄 Documento creado con {len(documento)} campos")
+            
             # Insertar en MongoDB
+            logger.info(f"💾 Insertando en MongoDB...")
             result = col.insert_one(documento)
             documento["_id"] = str(result.inserted_id)
             
-            logger.warning(f"🚨 ALERTA GUARDADA: {data['venta_id']} - {resultado['probabilidad_cancelacion']*100:.0f}% riesgo")
+            logger.warning(f"🚨 ✅ ALERTA GUARDADA EXITOSAMENTE: {data['venta_id']} - ID: {result.inserted_id} - {resultado['probabilidad_cancelacion']*100:.0f}% riesgo")
             
             return documento
             
         except Exception as e:
-            logger.error(f"❌ Error guardando predicción: {e}")
+            logger.error(f"❌ ERROR CRÍTICO guardando predicción: {e}")
+            logger.error(f"❌ Tipo de error: {type(e).__name__}")
+            logger.error(f"❌ Detalles: {str(e)}")
+            import traceback
+            logger.error(f"❌ Traceback:\n{traceback.format_exc()}")
             return None
     
     @staticmethod

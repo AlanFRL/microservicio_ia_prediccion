@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microservicio-ia-prediccion
+  labels:
+    app: prediccion-ia
+    version: v4.0
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: prediccion-ia
+  template:
+    metadata:
+      labels:
+        app: prediccion-ia
+        version: v4.0
+    spec:
+      containers:
+      - name: fastapi
+        image: tuusuario/microservicio-ia-prediccion:v1.0  # REEMPLAZA 'tuusuario'
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8001
+          name: http
+          protocol: TCP
+        
+        # Variables de entorno desde Secret
+        env:
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: fastapi-secrets
+              key: MONGODB_URI
+        - name: MONGODB_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: fastapi-secrets
+              key: MONGODB_DATABASE
+        - name: UMBRAL_RIESGO
+          valueFrom:
+            secretKeyRef:
+              name: fastapi-secrets
+              key: UMBRAL_RIESGO
+        - name: EMAIL_MODE
+          valueFrom:
+            secretKeyRef:
+              name: fastapi-secrets
+              key: EMAIL_MODE
+        - name: SMTP_HOST
+          valueFrom:
+            secretKeyRef:
+              name: fastapi-secrets
+              key: SMTP_HOST
+        - name: SMTP_PORT
+          valueFrom:
+            secretKeyRef:
+              name: fastapi-secrets
+              key: SMTP_PORT
+        - name: SMTP_USER
+          valueFrom:
+            secretKeyRef:
+              name: fastapi-secrets
+              key: SMTP_USER
+        - name: SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: fastapi-secrets
+              key: SMTP_PASSWORD
+        
+        # Liveness probe: verifica si el pod está vivo
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        # Readiness probe: verifica si el pod está listo para recibir tráfico
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        
+        # Recursos
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prediccion-ia-service
+  labels:
+    app: prediccion-ia
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8001
+    protocol: TCP
+    name: http
+  selector:
+    app: prediccion-ia

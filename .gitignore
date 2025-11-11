@@ -219,3 +219,20 @@ test-results/
 
 # Documentation builds
 docs/_build/
+
+# ============================================
+# Kubernetes / Docker
+# ============================================
+# Kubernetes config (contiene credenciales)
+k8s-config.yaml
+*-config.yaml
+kubeconfig
+kubeconfig.yaml
+
+# Docker
+.dockerignore
+
+# Secrets locales (NO subir)
+secrets/
+*.secret
+
